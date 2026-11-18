@@ -68,7 +68,6 @@ const colISO = ts => new Date(ts - 5 * 3600e3).toISOString();
 const aColombia = v => v ? v + ':00-05:00' : null;   // valor de <input type="datetime-local">
 
 // --- Ayudas para formularios ---
-const tag = hu => `<span class="tag">${hu}</span>`;
 const val = (form, name, def = '') => esc(ui.form && ui.form.name === form && ui.form.values[name] != null ? ui.form.values[name] : def);
 const ferr = (form, name) => ui.form && ui.form.name === form && ui.form.fields[name] ? `<span class="err">${esc(ui.form.fields[name])}</span>` : '';
 const inv = (form, name) => ui.form && ui.form.name === form && ui.form.fields[name] ? ' invalid' : '';

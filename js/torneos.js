@@ -15,6 +15,14 @@
 
 const DEPORTES = ['Fútbol', 'Baloncesto', 'Voleibol', 'Fútbol sala'];
 
+// Fecha corta para las tarjetas: "mié 18 nov · 11:17 p. m." (hora Colombia)
+const fmtCorta = ts => {
+  const d = new Date(ts);
+  const dia = new Intl.DateTimeFormat('es-CO', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short' }).format(d).replace(/[.,]/g, '');
+  const hora = new Intl.DateTimeFormat('es-CO', { timeZone: TZ, hour: 'numeric', minute: '2-digit', hour12: true }).format(d);
+  return `${dia} · ${hora}`;
+};
+
 // El servidor cierra los eventos cada minuto (pg_cron). Aquí se recalcula
 // para que la tarjeta cambie a "cerrado" justo a la hora, sin esperar.
 const estadoEvento = (e, now = Date.now()) => {
@@ -38,14 +46,14 @@ const tarjetaEvento = (e, u, mios) => {
   } else {
     cuerpo = `<div class="optlist">Opciones: ${esc(e.local)} · Empate · ${esc(e.visitante)}</div>`;
   }
-  if (st === 'programado') cuerpo += `<div class="check">Abre el ${fmtFecha(e.apertura)}.</div>`;
+  if (st === 'programado') cuerpo += `<div class="check">Abre: ${fmtCorta(e.apertura)}</div>`;
 
   return `<article class="card ev ${st}">
-    <div class="row" style="justify-content:space-between"><span class="chip ${st}">${st}</span>${u.rol === 'participante' ? tag('HU-07/08') : ''}</div>
+    <div class="row" style="justify-content:space-between"><span class="chip ${st}">${st}</span></div>
     <div class="match">${esc(e.local)} <i>vs</i> ${esc(e.visitante)}</div>
     <dl class="kv">
-      <dt>Partido</dt><dd>${fmtFecha(e.inicio)}</dd>
-      <dt>Cierre</dt><dd>${fmtFecha(e.cierre)} (hora Colombia)</dd>
+      <dt>Partido</dt><dd>${fmtCorta(e.inicio)}</dd>
+      <dt>Cierre</dt><dd>${fmtCorta(e.cierre)}</dd>
       <dt>Costo · premio</dt><dd>${e.costo} · ${e.premio} créditos</dd>
     </dl>
     ${cuerpo}
@@ -70,14 +78,14 @@ views.torneos = async (u) => {
       </section>`).join('')
     : '<div class="card">Aún no hay torneos. Un administrador puede crearlos en “Crear torneo”.</div>';
 
-  return `<div class="head"><h1>Torneos y eventos</h1>${tag('HU-06')}${tag('HU-10')}</div>
+  return `<div class="head"><h1>Torneos y eventos</h1></div>
     <p class="lede">Horas en hora de Colombia (UTC−5). Cada evento se cierra solo al llegar su hora de cierre.</p>
     ${aviso}${secciones}`;
 };
 
 views.nuevoTorneo = async () => {
   const hoy = colISO(Date.now()).slice(0, 10);
-  return `<div class="head"><h1>Crear torneo</h1>${tag('HU-04')}</div>
+  return `<div class="head"><h1>Crear torneo</h1></div>
     <form class="card stack" data-form="torneo" novalidate>
       <div class="grid2">
         <div class="field${inv('torneo', 'nombre')}"><label for="t-nombre">Nombre</label><input id="t-nombre" name="nombre" value="${val('torneo', 'nombre')}" placeholder="Copa Interfacultades 2026">${ferr('torneo', 'nombre')}</div>
@@ -92,14 +100,14 @@ views.nuevoTorneo = async () => {
 views.nuevoEvento = async () => {
   const torneos = await rpc('mp_torneos_opciones');
   if (!torneos.length) {
-    return `<div class="head"><h1>Crear evento 1X2</h1>${tag('HU-05')}</div><div class="card">Primero crea un torneo.</div>`;
+    return `<div class="head"><h1>Crear evento 1X2</h1></div><div class="card">Primero crea un torneo.</div>`;
   }
   const n = Date.now();
   const dt = ms => colISO(n + ms).slice(0, 16);
   const F = (name, label, type, def, extra = '') =>
     `<div class="field${inv('evento', name)}"><label for="e-${name}">${label}</label><input id="e-${name}" name="${name}" type="${type}" value="${val('evento', name, def)}" ${extra}>${ferr('evento', name)}</div>`;
 
-  return `<div class="head"><h1>Crear evento 1X2</h1>${tag('HU-05')}</div>
+  return `<div class="head"><h1>Crear evento 1X2</h1></div>
     <p class="lede">Opciones fijas: local, empate y visitante. Horas en hora de Colombia.</p>
     <form class="card stack" data-form="evento" novalidate>
       <div class="field${inv('evento', 'torneoId')}"><label for="e-torneo">Torneo</label><select id="e-torneo" name="torneoId">${torneos.map(t => `<option value="${t.id}" ${val('evento', 'torneoId') === String(t.id) ? 'selected' : ''}>${esc(t.nombre)}</option>`).join('')}</select>${ferr('evento', 'torneoId')}</div>

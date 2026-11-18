@@ -70,7 +70,7 @@ function opcionesPronostico(evento, usuario, estado, mios) {
       <span>Confirmar <b>${esc(etiquetaOpcion(evento, conf.opcion))}</b></span>
       <span class="mono">Costo ${evento.costo} · saldo ${s} → ${alcanza ? 'quedará en ' + (s - evento.costo) : 'no alcanza'}</span>
       ${alcanza ? '' : '<span class="err">Saldo insuficiente. El pronóstico no se registrará.</span>'}
-      <label class="check row" style="gap:6px"><input type="checkbox" id="sim-${evento.id}" data-action="sim" style="width:auto" ${conf.simular ? 'checked' : ''}> Simular corte de conexión al enviar (prueba de HU-08)</label>
+      <label class="check row" style="gap:6px"><input type="checkbox" id="sim-${evento.id}" data-action="sim" style="width:auto" ${conf.simular ? 'checked' : ''}> Simular corte de conexión al enviar</label>
       <div class="row"><button class="btn primary" data-action="confirm" ${alcanza ? '' : 'disabled'}>Confirmar pronóstico</button><button class="btn" data-action="cancel">Cancelar</button></div>
     </div>`;
   }

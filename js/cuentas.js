@@ -87,14 +87,38 @@ function tablaMovimientos(movs) {
     <tbody>${filas}</tbody></table></div>`;
 }
 
+/** Panel de marca que acompaña al login y al registro. */
+function pantallaAcceso(contenido) {
+  return `<div class="auth">
+    <aside class="auth-brand">
+      <div>
+        <span class="eyebrow">Pronósticos deportivos</span>
+        <p class="auth-title">Elige local, empate o visitante y sigue cada partido.</p>
+      </div>
+      <div class="board" aria-hidden="true"><span>1</span><span>X</span><span>2</span></div>
+      <ul class="auth-points">
+        <li>Los créditos no tienen valor monetario.</li>
+        <li>Cada evento se cierra solo a su hora, en hora de Colombia.</li>
+        <li>Cada crédito que entra o sale queda registrado.</li>
+      </ul>
+    </aside>
+    <section class="auth-form">${contenido}</section>
+  </div>`;
+}
+
 views.login = async function () {
-  return `<div class="head"><h1>Iniciar sesión</h1>${tag('HU-02')}</div>
-  <form class="card stack narrow" data-form="login" novalidate>
-    <div class="field"><label for="l-correo">Correo</label><input id="l-correo" name="correo" type="email" autocomplete="username" value="${val('login', 'correo')}"></div>
-    <div class="field"><label for="l-pass">Contraseña</label><input id="l-pass" name="password" type="password" autocomplete="current-password"></div>
-    <div class="row"><button class="btn primary">Entrar</button><button type="button" class="btn" data-action="go" data-view="registro">Crear una cuenta</button></div>
-    <small class="check">La sesión se cierra sola tras 5 minutos sin actividad.</small>
-  </form>`;
+  return pantallaAcceso(`
+    <div class="stack" style="gap:6px">
+      <div class="head"><h1>Iniciar sesión</h1></div>
+      <p class="check" style="margin:0">Entra con el correo con el que te registraste.</p>
+    </div>
+    <form class="stack" data-form="login" novalidate>
+      <div class="field"><label for="l-correo">Correo</label><input id="l-correo" name="correo" type="email" autocomplete="username" placeholder="nombre@dominio.co" value="${val('login', 'correo')}"></div>
+      <div class="field"><label for="l-pass">Contraseña</label><input id="l-pass" name="password" type="password" autocomplete="current-password"></div>
+      <button class="btn primary">Entrar</button>
+      <small class="check">La sesión se cierra sola tras 5 minutos sin actividad.</small>
+    </form>
+    <p class="auth-alt">¿No tienes cuenta? <button type="button" class="textlink" data-action="go" data-view="registro">Regístrate</button></p>`);
 };
 
 views.registro = async function () {
@@ -104,21 +128,25 @@ views.registro = async function () {
     return `<div class="field${inv('registro', n)}"><label for="r-${n}">${label}</label>
       <input id="r-${n}" name="${n}" type="${type}" ${valor} ${extra || ''}>${ferr('registro', n)}</div>`;
   }
-  return `<div class="head"><h1>Registro de participante</h1>${tag('HU-01')}</div>
-  <p class="lede">Tu cuenta queda con rol participante y saldo 0 hasta que un administrador haga la asignación inicial de créditos.</p>
-  <form class="card stack" data-form="registro" novalidate>
-    <div class="grid2">${campo('nombre', 'Nombre completo', 'text', 'autocomplete="name"')}${campo('documento', 'Documento de identidad', 'text', 'inputmode="numeric"')}</div>
-    ${campo('correo', 'Correo', 'email', 'autocomplete="email"')}
-    <div class="grid2">${campo('password', 'Contraseña', 'password', 'autocomplete="new-password"')}${campo('confirmar', 'Confirmar contraseña', 'password', 'autocomplete="new-password"')}</div>
-    <div class="row"><button class="btn primary">Registrarme</button></div>
-  </form>`;
+  return pantallaAcceso(`
+    <div class="stack" style="gap:6px">
+      <div class="head"><h1>Crear cuenta</h1></div>
+      <p class="check" style="margin:0">Tu cuenta queda como participante y con saldo 0 hasta que un administrador te asigne los créditos iniciales.</p>
+    </div>
+    <form class="stack" data-form="registro" novalidate>
+      ${campo('nombre', 'Nombre completo', 'text', 'autocomplete="name"')}
+      <div class="grid2">${campo('documento', 'Documento de identidad', 'text', 'inputmode="numeric"')}${campo('correo', 'Correo', 'email', 'autocomplete="email"')}</div>
+      <div class="grid2">${campo('password', 'Contraseña', 'password', 'autocomplete="new-password"')}${campo('confirmar', 'Confirmar contraseña', 'password', 'autocomplete="new-password"')}</div>
+      <button class="btn primary">Crear mi cuenta</button>
+    </form>
+    <p class="auth-alt">¿Ya tienes cuenta? <button type="button" class="textlink" data-action="go" data-view="login">Inicia sesión</button></p>`);
 };
 
 views.saldo = async function (u) {
   const datos = await rpc('mp_movimientos');
   const movs = datos.movimientos;
   const suma = movs.reduce((s, m) => s + m.cantidad, 0);
-  return `<div class="head"><h1>Mi saldo</h1>${tag('HU-09')}</div>
+  return `<div class="head"><h1>Mi saldo</h1></div>
     <div class="card row" style="gap:28px;align-items:flex-end">
       <div><div class="check">Saldo disponible</div><div class="big">${datos.saldo}</div><div class="check">créditos</div></div>
       <div class="check" style="max-width:40ch">Suma de los ${movs.length} movimientos listados: <b class="mono">${suma}</b> ${suma === datos.saldo ? '— coincide con el saldo.' : '— no coincide.'}</div>
@@ -136,7 +164,7 @@ views.auditoria = async function () {
   const opciones = participantes.length
     ? participantes.map(p => `<option value="${p.id}" ${String(p.id) === String(ui.audUser) ? 'selected' : ''}>${esc(p.nombre)} · ${esc(p.correo)}</option>`).join('')
     : '<option value="">Aún no hay participantes</option>';
-  return `<div class="head"><h1>Auditoría de movimientos</h1>${tag('HU-09')}</div>
+  return `<div class="head"><h1>Auditoría de movimientos</h1></div>
     <div class="card row"><div class="field" style="flex:1;min-width:220px"><label for="aud-user">Participante</label>
       <select id="aud-user" data-change="aud">${opciones}</select></div>
       <div><div class="check">Saldo</div><div class="big" style="font-size:40px">${datos.saldo}</div></div></div>
@@ -159,7 +187,7 @@ views.creditos = async function () {
     return `<tr><td>${esc(p.nombre)}</td><td>${esc(p.correo)}</td><td>${estado}</td></tr>`;
   }).join('') : '<tr><td colspan="3">Aún no hay participantes registrados.</td></tr>';
 
-  return `<div class="head"><h1>Asignación inicial de créditos</h1>${tag('HU-03')}</div>
+  return `<div class="head"><h1>Asignación inicial de créditos</h1></div>
     <div class="notice"><b>Los créditos no tienen valor monetario.</b> No se compran, no se venden y no se cambian por dinero.</div>
     <form class="card row" data-form="asignar" novalidate style="align-items:flex-end">
       <div class="field${inv('asignar', 'participante')}" style="flex:2;min-width:220px"><label for="a-part">Participante sin asignación</label>
